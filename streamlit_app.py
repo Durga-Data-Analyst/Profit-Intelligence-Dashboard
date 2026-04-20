@@ -6,13 +6,8 @@ import plotly.express as px
 st.set_page_config(page_title="Profit Intelligence Dashboard", layout="wide")
 
 # ---------------- LOAD DATA ----------------
-@st.cache_data
-def load_data():
-    df = pd.read_csv("APL_Logistics.csv", encoding='latin1')
-    df['Profit Margin (%)'] = (df['Order Profit Per Order'] / df['Sales']) * 100
-    return df
-
-df = load_data()
+df = pd.read_csv("APL_Logistics.csv", encoding='latin1')
+df['Profit Margin (%)'] = (df['Order Profit Per Order'] / df['Sales']) * 100
 
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("🔍 Filters")
