@@ -7,7 +7,7 @@ st.set_page_config(page_title="Profit Intelligence Dashboard", layout="wide")
 
 # ---------------- LOAD DATA ----------------
 df = pd.read_csv("APL_Logistics.csv", encoding='latin1')
-df['Profit Margin (%)'] = (df['Order Profit Per Order'] / df['Sales']) * 100
+df['Profit Margin (%)'] = (df['Benefit per order'] / df['Sales']) * 100
 
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("🔍 Filters")
