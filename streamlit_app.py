@@ -6,7 +6,13 @@ import plotly.express as px
 st.set_page_config(page_title="Profit Intelligence Dashboard", layout="wide")
 
 # ---------------- LOAD DATA ----------------
-df = pd.read_csv("APL_Logistics.csv", encoding='latin1')
+df = pd.read_csv("APL_Logistics.csv", encoding="latin1")
+
+df.columns = df.columns.str.strip()
+
+st.write("Columns:", df.columns)
+
+df['Profit Margin (%)'] = (df['Benefit per order'] / df['Sales']) * 100
 
 
 # ---------------- SIDEBAR ----------------
