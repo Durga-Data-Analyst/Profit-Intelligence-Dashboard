@@ -1,16 +1,10 @@
 import pandas as pd
 import streamlit as st
-
+import plotly.express as px
 url = "https://drive.google.com/uc?id=13bBRo5yE8JIJbjiv4rvGfZdfA8A_akB5"
 
 df = pd.read_csv(url, encoding="latin1")
 
-# Clean column names
-df.columns = df.columns.str.strip()
-
-# Debug (run once)
-st.write("Columns:", df.columns)
-st.write(df.head())
 
 # Profit Margin (correct column)
 df['Profit Margin (%)'] = (df['Benefit per order'] / df['Sales']) * 100
