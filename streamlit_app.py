@@ -1,17 +1,18 @@
-import streamlit as st
 import pandas as pd
-import plotly.express as px
+import streamlit as st
 
-# ---------------- CONFIG ----------------
-st.set_page_config(page_title="Profit Intelligence Dashboard", layout="wide")
+url = "https://drive.google.com/uc?id=13bBRo5yE8JIJbjiv4rvGfZdfA8A_akB5"
 
-# ---------------- LOAD DATA ----------------
-df = pd.read_csv("APL_Logistics.csv", encoding="latin1")
+df = pd.read_csv(url, encoding="latin1")
 
+# Clean column names
 df.columns = df.columns.str.strip()
 
+# Debug (run once)
 st.write("Columns:", df.columns)
+st.write(df.head())
 
+# Profit Margin (correct column)
 df['Profit Margin (%)'] = (df['Benefit per order'] / df['Sales']) * 100
 
 
