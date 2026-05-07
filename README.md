@@ -182,7 +182,7 @@ streamlit run streamlit_app.py
 
 # 👨‍💻 Author
 
-## Arvind  
+## Durga Prasad Keshri
 **Data Analyst | Business Analytics Enthusiast**
 
 - GitHub: https://github.com/Durga-Data-Analyst
