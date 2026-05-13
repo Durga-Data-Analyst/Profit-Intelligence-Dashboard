@@ -73,7 +73,7 @@ with tab2:
 
     col1, col2 = st.columns(2)
 
-   top = customer.nlargest(10, 'Benefit per order')
+    top = customer.nlargest(10, 'Benefit per order')
 
     fig1 = px.bar(
     top,
@@ -89,9 +89,9 @@ with tab2:
     height=500)
 
 
-   st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig1, use_container_width=True)
 
-   bottom = customer.nsmallest(10, 'Benefit per order')
+    bottom = customer.nsmallest(10, 'Benefit per order')
 
     fig2 = px.bar(
     bottom,
