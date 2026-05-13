@@ -87,8 +87,7 @@ discount_filter[1]
 # HEADER
 # -------------------------------------------------
 st.title(" Profit Intelligence Dashboard")
-st.markdown("Analyze profitability, customer value, product performance, and discount
-impact across markets and regions.")
+st.markdown("APL Logistics Supply Chain Projects")
 
 
 # -------------------------------------------------
