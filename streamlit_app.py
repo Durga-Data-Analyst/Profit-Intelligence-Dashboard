@@ -1,151 +1,382 @@
-import pandas as pd
 import streamlit as st
+import pandas as pd
 import plotly.express as px
-url = "https://drive.google.com/uc?id=13bBRo5yE8JIJbjiv4rvGfZdfA8A_akB5"
 
-df = pd.read_csv(url, encoding="latin1")
+# -------------------------------------------------
+# PAGE CONFIG
+# -------------------------------------------------
+st.set_page_config(
+    page_title="Profit Intelligence Dashboard",
+    layout="wide"
+)
+
+# -------------------------------------------------
+# LOAD DATA
+# -------------------------------------------------
+@st.cache_data
+
+def load_data():
+    url = "https://drive.google.com/uc?id=13bBRo5yE8JIJbjiv4rvGfZdfA8A_akB5"
+    df = pd.read_csv(url, encoding='latin1')
+    
+    # Clean columns
+    df.columns = df.columns.str.strip()
+    
+    # Profit Margin
+    df['Profit Margin (%)'] = (
+    df['Benefit per order'] / df['Sales']
+    ) * 100
+    return df
 
 
-# Profit Margin (correct column)
-df['Profit Margin (%)'] = (df['Benefit per order'] / df['Sales']) * 100
+df = load_data()
 
+# -------------------------------------------------
+# SIDEBAR FILTERS
+# -------------------------------------------------
+st.sidebar.title(" Dashboard Filters")
 
-# ---------------- SIDEBAR ----------------
-st.sidebar.title("🔍 Filters")
+segment = st.sidebar.multiselect(
+ "Customer Segment",
+ options=df['Customer Segment'].unique(),
+ default=df['Customer Segment'].unique()
+)
 
-segment = st.sidebar.multiselect("Customer Segment", df['Customer Segment'].unique(), default=df['Customer Segment'].unique())
-market = st.sidebar.multiselect("Market", df['Market'].unique(), default=df['Market'].unique())
-category = st.sidebar.multiselect("Category", df['Category Name'].unique(), default=df['Category Name'].unique())
+market = st.sidebar.multiselect(
+ "Market",
+ options=df['Market'].unique(),
+ default=df['Market'].unique()
+)
 
-discount_filter = st.sidebar.slider("Discount Rate", 0.0, 0.5, (0.0, 0.5))
+category = st.sidebar.multiselect(
+"Category",
+options=df['Category Name'].unique(),
+default=df['Category Name'].unique()
+)
 
-# Apply filters
+region = st.sidebar.multiselect(
+"Order Region",
+options=df['Order Region'].unique(),
+default=df['Order Region'].unique()
+)
+
+# Discount slider
+discount_filter = st.sidebar.slider(
+"Discount Rate",
+min_value=0.0,
+max_value=0.5,
+value=(0.0, 0.5)
+)
+
+# -------------------------------------------------
+# APPLY FILTERS
+# -------------------------------------------------
 filtered_df = df[
-    (df['Customer Segment'].isin(segment)) &
-    (df['Market'].isin(market)) &
-    (df['Category Name'].isin(category)) &
-    (df['Order Item Discount Rate'].between(discount_filter[0], discount_filter[1]))
+(df['Customer Segment'].isin(segment)) &
+(df['Market'].isin(market)) &
+(df['Category Name'].isin(category)) &
+(df['Order Region'].isin(region)) &
+(df['Order Item Discount Rate'].between(
+discount_filter[0],
+discount_filter[1]
+)
+)
 ]
 
-# ---------------- HEADER ----------------
-st.title("📊 Profit Intelligence Dashboard")
-st.markdown("Analyze profitability, customer value, and discount impact in one place")
+# -------------------------------------------------
+# HEADER
+# -------------------------------------------------
+st.title(" Profit Intelligence Dashboard")
+st.markdown(
+"Analyze profitability, customer value, product performance, and discount
+impact across markets and regions."
+)
 
-# ---------------- KPI SECTION ----------------
-col1, col2, col3 = st.columns(3)
-
+# -------------------------------------------------
+# KPI SECTION
+# -------------------------------------------------
+col1, col2, col3, col4 = st.columns(4)
+# KPI calculations
 total_sales = filtered_df['Sales'].sum()
-total_profit = filtered_df['Order Profit Per Order'].sum()
-margin = (total_profit / total_sales) * 100 if total_sales != 0 else 0
+total_profit = filtered_df['Benefit per order'].sum()
+profit_margin = (
+total_profit / total_sales
+) * 100 if total_sales != 0 else 0
+avg_discount = filtered_df['Order Item Discount Rate'].mean() * 100
 
-col1.metric("💰 Revenue", f"${total_sales:,.0f}")
-col2.metric("📈 Profit", f"${total_profit:,.0f}")
-col3.metric("📊 Margin %", f"{margin:.2f}%")
+# KPI cards
+col1.metric(
+" Total Sales",
+f"${total_sales:,.0f}"
+)
+col2.metric(
+" Total Profit",
+f"${total_profit:,.0f}"
+)
+col3.metric(
+" Profit Margin",
+f"{profit_margin:.2f}%"
+)
+col4.metric(
+" Avg Discount",
+f"{avg_discount:.2f}%"
+)
 
 st.markdown("---")
-
-# ---------------- TABS ----------------
+# -------------------------------------------------
+# TABS
+# -------------------------------------------------
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📈 Overview",
-    "👥 Customers",
-    "📦 Products",
-    "💸 Discount"
+" Revenue & Profit",
+" Customer Analysis",
+" Product Performance",
+" Discount Analysis"
 ])
-
-# ================= TAB 1 =================
+# =================================================
+# TAB 1 - REVENUE & PROFIT OVERVIEW
+# =================================================
 with tab1:
-    st.subheader("Revenue vs Profit Trend")
+st.subheader("Revenue vs Profit Comparison")
+comparison_df = pd.DataFrame({
+'Metric': ['Sales', 'Profit'],
+'Value': [
+filtered_df['Sales'].sum(),
+filtered_df['Benefit per order'].sum()
+]
+})
 
-    if 'order date (DateOrders)' in filtered_df.columns:
-        filtered_df['Order Date'] = pd.to_datetime(filtered_df['order date (DateOrders)'])
-        filtered_df['Month'] = filtered_df['Order Date'].dt.to_period('M').astype(str)
+fig1 = px.bar(
+comparison_df,
+x='Metric',
+y='Value',
+text='Value',
+title='Total Sales vs Total Profit'
+)
+fig1.update_traces(
+texttemplate='%{text:.2s}',
+textposition='outside'
+)
+fig1.update_layout(
+height=500
+)
+st.plotly_chart(fig1, use_container_width=True)
 
-        trend = filtered_df.groupby('Month')[['Sales', 'Order Profit Per Order']].sum().reset_index()
+st.subheader("Market Level Profitability")
+market_analysis = (
+filtered_df
+.groupby('Market', as_index=False)
+.agg({
+'Sales': 'sum',
+'Benefit per order': 'sum'
+})
+)
+market_analysis['Profit Margin (%)'] = (
+market_analysis['Benefit per order'] /
+market_analysis['Sales']
+) * 100
+fig2 = px.bar(
+market_analysis,
+x='Market',
+y='Profit Margin (%)',
+text='Profit Margin (%)',
+title='Profit Margin by Market'
+)
+fig2.update_layout(height=500)
+st.plotly_chart(fig2, use_container_width=True)
 
-        fig = px.line(trend, x='Month', y=['Sales', 'Order Profit Per Order'], title="Trend Over Time")
-        st.plotly_chart(fig, use_container_width=True)
-
-# ================= TAB 2 =================
+# =================================================
+# TAB 2 - CUSTOMER ANALYSIS
+# =================================================
 with tab2:
-    st.subheader("Customer Value Analysis")
+st.subheader("Customer Value Analysis")
+customer = (
+filtered_df
+.groupby('Customer Id', as_index=False)['Benefit per order']
+.sum()
+)
+col_left, col_right = st.columns(2)
+# Top Customers
+top = customer.sort_values(
+by='Benefit per order',
+ascending=False
+).head(10)
+fig3 = px.bar(
+top,
+x='Benefit per order',
+y='Customer Id',
+orientation='h',
+text='Benefit per order',
+title='Top Customers by Profit'
+)
+fig3.update_layout(
+height=500,
+yaxis={'categoryorder':'total ascending'}
+)
+col_left.plotly_chart(fig3, use_container_width=True)
+# Bottom Customers
+bottom = customer.sort_values(
+by='Benefit per order',
+ascending=True
+).head(10)
+fig4 = px.bar(
+bottom,
+x='Benefit per order',
+y='Customer Id',
+orientation='h',
+text='Benefit per order',
+title='Bottom Customers by Profit'
+)
+fig4.update_layout(
+height=500,
+yaxis={'categoryorder':'total ascending'}
+)
 
-    customer = filtered_df.groupby('Customer Id')['Order Profit Per Order'].sum().reset_index()
+col_right.plotly_chart(fig4, use_container_width=True)
+# Segment contribution
+st.subheader("Customer Segment Contribution")
+segment_df = (
+filtered_df
+.groupby('Customer Segment', as_index=False)['Benefit per order']
+.sum()
+)
 
-    col1, col2 = st.columns(2)
-
-    top = customer.nlargest(10, 'Benefit per order')
-
-    fig1 = px.bar(
-    top,
-    x='Benefit per order',
-    y='Customer Id',
-    orientation='h',
-    title='Top Customers by Profit',
-    text_auto=True)
-
-
-    fig1.update_layout(
-    yaxis={'categoryorder':'total ascending'},
-    height=500)
-
-
-    st.plotly_chart(fig1, use_container_width=True)
-
-    bottom = customer.nsmallest(10, 'Benefit per order')
-
-    fig2 = px.bar(
-    bottom,
-    x='Benefit per order',
-    y='Customer Id',
-    orientation='h',
-    title='Bottom Customers by Profit',
-    text_auto=True)
-
-
-    fig2.update_layout(
-    yaxis={'categoryorder':'total ascending'},
-    height=500)
-
-
-    st.plotly_chart(fig2, use_container_width=True)
-
-    segment_contribution = filtered_df.groupby('Customer Segment')['Order Profit Per Order'].sum().reset_index()
-    fig3 = px.pie(segment_contribution, names='Customer Segment', values='Order Profit Per Order', title="Segment Contribution")
-    st.plotly_chart(fig3, use_container_width=True)
-
-# ================= TAB 3 =================
+fig5 = px.pie(
+segment_df,
+names='Customer Segment',
+values='Benefit per order',
+title='Profit Contribution by Customer Segment'
+)
+st.plotly_chart(fig5, use_container_width=True)
+# =================================================
+# TAB 3 - PRODUCT PERFORMANCE
+# =================================================
 with tab3:
-    st.subheader("Product & Category Performance")
+st.subheader("Product & Category Performance")
+# Product margin analysis
+product_df = (
+filtered_df
+.groupby('Product Name', as_index=False)
+.agg({
+'Sales': 'sum',
+'Benefit per order': 'sum'
+})
+)
+product_df['Profit Margin (%)'] = (
+product_df['Benefit per order'] /
+product_df['Sales']
+) * 100
 
-    product = filtered_df.groupby('Product Name')['Profit Margin (%)'].mean().reset_index()
-    product = product.sort_values(by='Profit Margin (%)', ascending=False).head(10)
+top_products = product_df.sort_values(
+by='Profit Margin (%)',
+ascending=False
+).head(10)
+fig6 = px.bar(
+top_products,
+x='Profit Margin (%)',
+y='Product Name',
+orientation='h',
+text='Profit Margin (%)',
+title='Top Product Margins'
+)
 
-    fig4 = px.bar(product, x='Product Name', y='Profit Margin (%)', title="Top Product Margins")
-    st.plotly_chart(fig4, use_container_width=True)
+fig6.update_layout(height=600)
+st.plotly_chart(fig6, use_container_width=True)
+# Category profitability
+st.subheader("Category Profitability")
+category_df = (
+filtered_df
+.groupby('Category Name', as_index=False)
+.agg({
+'Sales': 'sum',
+'Benefit per order': 'sum'
+})
+)
+category_df['Profit Margin (%)'] = (
+category_df['Benefit per order'] /
+category_df['Sales']
+) * 100
+fig7 = px.bar(
+category_df,
+x='Category Name',
+y='Profit Margin (%)',
+text='Profit Margin (%)',
+title='Category Profitability Analysis'
+)
 
-    category = filtered_df.groupby('Category Name')['Profit Margin (%)'].mean().reset_index()
-    fig5 = px.bar(category, x='Category Name', y='Profit Margin (%)', title="Category Profitability")
-    st.plotly_chart(fig5, use_container_width=True)
-
-# ================= TAB 4 =================
+fig7.update_layout(height=500)
+st.plotly_chart(fig7, use_container_width=True)
+# =================================================
+# TAB 4 - DISCOUNT ANALYSIS
+# =================================================
 with tab4:
-    st.subheader("Discount Impact Analysis")
-
-    fig6 = px.scatter(
-        filtered_df,
-        x='Order Item Discount Rate',
-        y='Profit Margin (%)',
-        title="Discount vs Profit Margin"
-    )
-    st.plotly_chart(fig6, use_container_width=True)
-
-    st.subheader("What-if Scenario")
-
-    discount = st.slider("Simulate Discount Rate", 0.0, 0.5, 0.1)
-    estimated_margin = filtered_df['Profit Margin (%)'].mean() - (discount * 20)
-
-    st.metric("Estimated Margin After Discount", f"{estimated_margin:.2f}%")
-
-# ---------------- FOOTER ----------------
+st.subheader("Discount vs Profit Margin")
+# Create discount buckets
+discount_analysis = (
+filtered_df
+.groupby('Order Item Discount Rate', as_index=False)
+.agg({
+'Profit Margin (%)': 'mean'
+})
+)
+# Better readable line chart instead of messy scatter
+fig8 = px.line(
+discount_analysis,
+x='Order Item Discount Rate',
+y='Profit Margin (%)',
+markers=True,
+title='Discount Rate vs Average Profit Margin'
+)
+fig8.update_layout(height=500)
+st.plotly_chart(fig8, use_container_width=True)
+# Discount bucket analysis
+st.subheader("Discount Threshold Analysis")
+filtered_df['Discount Bucket'] = pd.cut(
+filtered_df['Order Item Discount Rate'],
+bins=[0, 0.05, 0.10, 0.15, 0.20, 0.30],
+labels=[
+'0-5%',
+'5-10%',
+'10-15%',
+'15-20%',
+'20-30%'
+]
+)
+bucket_df = (
+filtered_df
+.groupby('Discount Bucket', as_index=False)
+.agg({
+'Profit Margin (%)': 'mean'
+})
+)
+fig9 = px.bar(
+bucket_df,
+x='Discount Bucket',
+y='Profit Margin (%)',
+text='Profit Margin (%)',
+title='Profit Margin Across Discount Buckets'
+)
+fig9.update_layout(height=500)
+st.plotly_chart(fig9, use_container_width=True)
+# What-if simulation
+st.subheader("What-if Discount Simulation")
+simulation_discount = st.slider(
+"Simulate Discount Rate",
+0.0,
+0.5,
+0.1
+)
+estimated_margin = (
+filtered_df['Profit Margin (%)'].mean()
+- (simulation_discount * 20)
+)
+st.metric(
+"Estimated Profit Margin",
+f"{estimated_margin:.2f}%"
+)
+# -------------------------------------------------
+# FOOTER
+# -------------------------------------------------
 st.markdown("---")
-st.caption("Built with Streamlit | Profit Intelligence Project")
+st.caption(
+"Built with Streamlit | Profit Intelligence Dashboard"
+)
