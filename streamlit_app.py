@@ -189,7 +189,7 @@ with tab2:
     st.subheader("Customer Value Analysis")
     customer = (
     filtered_df
-    .groupby('Customer Id', as_index=False)['Benefit per order']
+    .groupby('Customer Fname', as_index=False)['Benefit per order']
     .sum()
     )
 col_left, col_right = st.columns(2)
