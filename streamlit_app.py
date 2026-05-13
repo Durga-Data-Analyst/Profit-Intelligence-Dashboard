@@ -201,7 +201,7 @@ ascending=False
 fig3 = px.bar(
 top,
 x='Benefit per order',
-y='Customer Id',
+y='Customer Fname',
 orientation='h',
 text='Benefit per order',
 title='Top Customers by Profit'
@@ -219,7 +219,7 @@ ascending=True
 fig4 = px.bar(
 bottom,
 x='Benefit per order',
-y='Customer Id',
+y='Customer Fname',
 orientation='h',
 text='Benefit per order',
 title='Bottom Customers by Profit'
