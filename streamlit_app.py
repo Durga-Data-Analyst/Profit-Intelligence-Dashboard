@@ -134,14 +134,14 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # TAB 1 - REVENUE & PROFIT OVERVIEW
 # =================================================
 with tab1:
-st.subheader("Revenue vs Profit Comparison")
-comparison_df = pd.DataFrame({
-'Metric': ['Sales', 'Profit'],
-'Value': [
-filtered_df['Sales'].sum(),
-filtered_df['Benefit per order'].sum()
-]
-})
+    st.subheader("Revenue vs Profit Comparison")
+    comparison_df = pd.DataFrame({
+    'Metric': ['Sales', 'Profit'],
+    'Value': [
+    filtered_df['Sales'].sum(),
+    filtered_df['Benefit per order'].sum()
+    ]
+    })
 
 fig1 = px.bar(
 comparison_df,
