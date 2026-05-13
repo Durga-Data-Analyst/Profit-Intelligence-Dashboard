@@ -73,13 +73,41 @@ with tab2:
 
     col1, col2 = st.columns(2)
 
-    top = customer.nlargest(10, 'Order Profit Per Order')
-    fig1 = px.bar(top, x='Customer Id', y='Order Profit Per Order', title="Top Customers")
-    col1.plotly_chart(fig1, use_container_width=True)
+   top = customer.nlargest(10, 'Benefit per order')
 
-    bottom = customer.nsmallest(10, 'Order Profit Per Order')
-    fig2 = px.bar(bottom, x='Customer Id', y='Order Profit Per Order', title="Bottom Customers")
-    col2.plotly_chart(fig2, use_container_width=True)
+    fig1 = px.bar(
+    top,
+    x='Benefit per order',
+    y='Customer Id',
+    orientation='h',
+    title='Top Customers by Profit',
+    text_auto=True)
+
+
+    fig1.update_layout(
+    yaxis={'categoryorder':'total ascending'},
+    height=500)
+
+
+   st.plotly_chart(fig1, use_container_width=True)
+
+   bottom = customer.nsmallest(10, 'Benefit per order')
+
+    fig2 = px.bar(
+    bottom,
+    x='Benefit per order',
+    y='Customer Id',
+    orientation='h',
+    title='Bottom Customers by Profit',
+    text_auto=True)
+
+
+    fig2.update_layout(
+    yaxis={'categoryorder':'total ascending'},
+    height=500)
+
+
+    st.plotly_chart(fig2, use_container_width=True)
 
     segment_contribution = filtered_df.groupby('Customer Segment')['Order Profit Per Order'].sum().reset_index()
     fig3 = px.pie(segment_contribution, names='Customer Segment', values='Order Profit Per Order', title="Segment Contribution")
