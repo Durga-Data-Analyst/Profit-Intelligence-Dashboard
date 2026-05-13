@@ -186,12 +186,12 @@ st.plotly_chart(fig2, use_container_width=True)
 # TAB 2 - CUSTOMER ANALYSIS
 # =================================================
 with tab2:
-st.subheader("Customer Value Analysis")
-customer = (
-filtered_df
-.groupby('Customer Id', as_index=False)['Benefit per order']
-.sum()
-)
+    st.subheader("Customer Value Analysis")
+    customer = (
+    filtered_df
+    .groupby('Customer Id', as_index=False)['Benefit per order']
+    .sum()
+    )
 col_left, col_right = st.columns(2)
 # Top Customers
 top = customer.sort_values(
@@ -249,7 +249,7 @@ st.plotly_chart(fig5, use_container_width=True)
 # TAB 3 - PRODUCT PERFORMANCE
 # =================================================
 with tab3:
-st.subheader("Product & Category Performance")
+    st.subheader("Product & Category Performance")
 # Product margin analysis
 product_df = (
 filtered_df
@@ -307,7 +307,7 @@ st.plotly_chart(fig7, use_container_width=True)
 # TAB 4 - DISCOUNT ANALYSIS
 # =================================================
 with tab4:
-st.subheader("Discount vs Profit Margin")
+    st.subheader("Discount vs Profit Margin")
 # Create discount buckets
 discount_analysis = (
 filtered_df
